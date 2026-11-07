@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 const Scene3D = lazy(() => import("./Scene3D"));
 
@@ -16,6 +16,19 @@ export default function Stage({ color, stage, glow, rtl }) {
   };
   const up = () => (lastX.current = null);
 
+  // Start the heavy 3D only after the page has shown its text,
+  // so the first screen appears fast and the 3D joins a moment later
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const start = () => {
+      if ("requestIdleCallback" in window) requestIdleCallback(() => setReady(true), { timeout: 1500 });
+      else setTimeout(() => setReady(true), 300);
+    };
+    if (document.readyState === "complete") start();
+    else window.addEventListener("load", start, { once: true });
+    return () => window.removeEventListener("load", start);
+  }, []);
+
   return (
     <div
       className="fixed inset-0 z-10 cursor-grab active:cursor-grabbing touch-pan-y"
@@ -30,9 +43,11 @@ export default function Stage({ color, stage, glow, rtl }) {
         className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vmin] h-[70vmin] rounded-full blur-[120px] opacity-35 transition-colors duration-1000 pointer-events-none"
         style={{ background: glow }}
       />
-      <Suspense fallback={null}>
-        <Scene3D color={color} stage={stage} spin={spin} rtl={rtl} />
-      </Suspense>
+      {ready && (
+        <Suspense fallback={null}>
+          <Scene3D color={color} stage={stage} spin={spin} rtl={rtl} />
+        </Suspense>
+      )}
     </div>
   );
 }

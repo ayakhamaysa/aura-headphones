@@ -160,15 +160,19 @@ function Headphones({ color, stage, spin, rtl }) {
   }, [scene, material]);
 
   const target = useMemo(() => new THREE.Color(), []);
+  const invalidate = useThree((state) => state.invalidate);
   useEffect(() => {
     target.set(color);
-  }, [color, target]);
+    invalidate(); // draw again so the new color shows
+  }, [color, target, invalidate]);
 
   const intro = useRef(0); // 0 → 1 in the first second: the headphones rise into place
 
-  useFrame((_, delta) => {
+  useFrame((state, frameDelta) => {
     const g = group.current;
     if (!g) return;
+    // After a pause the first frame can report a long time; cap it so nothing jumps
+    const delta = Math.min(frameDelta, 0.1);
     // Move the body color softly toward the chosen one
     material.color.lerp(target, Math.min(1, delta * 6));
     intro.current = Math.min(1, intro.current + delta * 0.8);
@@ -194,6 +198,15 @@ function Headphones({ color, stage, spin, rtl }) {
     g.scale.setScalar(g.scale.x + (want.scale - g.scale.x) * k);
     g.rotation.y += (want.ry - g.rotation.y) * k;
     g.rotation.x += (want.rx - g.rotation.x) * k;
+
+    // Save power: we only draw a new frame while something still moves.
+    // When the headphones reach their place, drawing stops until you scroll, drag or pick a color.
+    const moving =
+      intro.current < 1 ||
+      Math.abs(want.x - g.position.x) + Math.abs(want.y - g.position.y) + Math.abs(want.scale - g.scale.x) > 0.001 ||
+      Math.abs(want.ry - g.rotation.y) + Math.abs(want.rx - g.rotation.x) > 0.001 ||
+      Math.abs(material.color.r - target.r) + Math.abs(material.color.g - target.g) + Math.abs(material.color.b - target.b) > 0.003;
+    if (moving) state.invalidate();
   });
 
   return (
@@ -210,9 +223,29 @@ function Headphones({ color, stage, spin, rtl }) {
 
 // stage: a ref with the current section (with fractions while scrolling)
 // spin: a ref with the extra turn from dragging with the mouse or finger
+// Wakes the drawing up when the page scrolls, resizes or the user drags
+function WakeOnMove() {
+  const invalidate = useThree((state) => state.invalidate);
+  useEffect(() => {
+    const wake = () => invalidate();
+    const events = ["scroll", "resize", "pointermove", "touchmove"];
+    events.forEach((e) => window.addEventListener(e, wake, { passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, wake));
+  }, [invalidate]);
+  return null;
+}
+
 export default function Scene3D({ color, stage, spin, rtl }) {
   return (
-    <Canvas camera={{ position: [0, 0, 8], fov: 30 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }}>
+    // frameloop "demand": draw only when needed (not 60 times a second all the time)
+    // dpr up to 1.5: sharp on good screens, much lighter than 2
+    <Canvas
+      frameloop="demand"
+      camera={{ position: [0, 0, 8], fov: 30 }}
+      dpr={[1, 1.5]}
+      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+    >
+      <WakeOnMove />
       <ambientLight intensity={0.35} />
       <directionalLight position={[3, 4, 5]} intensity={1.4} />
       {/* Rim lights from behind: bright edges, so dark colors stand out */}
@@ -220,7 +253,7 @@ export default function Scene3D({ color, stage, spin, rtl }) {
       <directionalLight position={[5, 1, -5]} intensity={3.2} />
 
       {/* Studio reflections made of light panels (no download needed) */}
-      <Environment resolution={256}>
+      <Environment resolution={128}>
         <Lightformer intensity={2.2} position={[0, 5, 2]} scale={[10, 2, 1]} />
         <Lightformer intensity={1.2} position={[-6, 1, 1]} rotation-y={Math.PI / 2} scale={[8, 2, 1]} />
         <Lightformer intensity={1.2} position={[6, 1, 1]} rotation-y={-Math.PI / 2} scale={[8, 2, 1]} />
