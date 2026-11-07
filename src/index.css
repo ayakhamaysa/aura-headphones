@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* Colors and fonts. Change them here and they change everywhere */
+@theme {
+  --color-void: #060607; /* page background */
+  --color-glass: #111114; /* cards */
+  --color-edge: #232329; /* thin borders */
+  --color-pearl: #f4f3ef; /* main text */
+  --color-haze: #8f909a; /* soft text */
+  --font-display: "Space Grotesk", "IBM Plex Sans Arabic", sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+body {
+  @apply bg-void text-pearl font-sans antialiased;
+}
+:root[lang="ar"] body,
+:root[lang="ar"] .font-display {
+  font-family: "IBM Plex Sans Arabic", sans-serif;
+}
+
+/* Silver shine for big titles */
+.shine {
+  background: linear-gradient(180deg, #ffffff 10%, #8d8f99 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* Only the edge of the letters */
+/* The big word behind the headphones: a clear silver outline with a soft fill fading down */
+.outline-text {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(244, 243, 239, 0.38);
+  background: linear-gradient(180deg, rgba(244, 243, 239, 0.12), rgba(244, 243, 239, 0));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+/* Small uppercase label */
+.label {
+  @apply text-[11px] uppercase tracking-[0.35em] text-haze;
+}
+
+/* Fine film grain over the whole page (SVG noise, no image file) */
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+}
