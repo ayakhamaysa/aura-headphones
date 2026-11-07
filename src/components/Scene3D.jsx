@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { ContactShadows, Environment, Lightformer, useGLTF, Center } from "@react-three/drei";
+import { Environment, Lightformer, useGLTF, Center } from "@react-three/drei";
 import * as THREE from "three";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { model } from "../data/product";
@@ -203,8 +203,8 @@ function Headphones({ color, stage, spin, rtl }) {
     // When the headphones reach their place, drawing stops until you scroll, drag or pick a color.
     const moving =
       intro.current < 1 ||
-      Math.abs(want.x - g.position.x) + Math.abs(want.y - g.position.y) + Math.abs(want.scale - g.scale.x) > 0.001 ||
-      Math.abs(want.ry - g.rotation.y) + Math.abs(want.rx - g.rotation.x) > 0.001 ||
+      Math.abs(want.x - g.position.x) + Math.abs(want.y - g.position.y) + Math.abs(want.scale - g.scale.x) > 0.004 ||
+      Math.abs(want.ry - g.rotation.y) + Math.abs(want.rx - g.rotation.x) > 0.003 ||
       Math.abs(material.color.r - target.r) + Math.abs(material.color.g - target.g) + Math.abs(material.color.b - target.b) > 0.003;
     if (moving) state.invalidate();
   });
@@ -243,7 +243,8 @@ export default function Scene3D({ color, stage, spin, rtl }) {
       frameloop="demand"
       camera={{ position: [0, 0, 8], fov: 30 }}
       dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+      // Smoothing edges (antialias) is only needed on normal screens; sharp phone screens don't need it
+      gl={{ antialias: window.devicePixelRatio < 1.5, alpha: true, powerPreference: "high-performance" }}
     >
       <WakeOnMove />
       <ambientLight intensity={0.35} />
@@ -262,7 +263,7 @@ export default function Scene3D({ color, stage, spin, rtl }) {
       </Environment>
 
       <Headphones color={color} stage={stage} spin={spin} rtl={rtl} />
-      <ContactShadows position={[0, -2.3, 0]} opacity={0.45} scale={12} blur={3} far={4} />
+
     </Canvas>
   );
 }

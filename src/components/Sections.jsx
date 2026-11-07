@@ -129,8 +129,8 @@ export function Colors({ lang, color, setColor }) {
         {/* The name changes softly with every color */}
         <motion.p
           key={picked.id}
-          initial={{ opacity: 0, y: 10, filter: "blur(6px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="font-display text-xl md:text-2xl tracking-wide"
         >
