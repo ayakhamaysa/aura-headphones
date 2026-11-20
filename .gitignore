@@ -26,3 +26,6 @@ dist-ssr
 # Secrets and Vercel settings (never upload)
 .env
 .vercel
+
+# Never upload these
+.env.*
